@@ -8,6 +8,7 @@ const config = {
   port: 3333,
   prefix: '/api',
   mockPath: './mocks',
+  cors: true,
   responseWrapper: function (_req, res, data = null) {
     res.json({
       code: 0,
@@ -15,30 +16,19 @@ const config = {
       data,
     });
   },
-  errorHandler: function (err, req, res, next) {
-    res.status(err.status || 500).json({
-      code: 500,
-      msg: 'server internal error',
-      data: {
-        url: req.url,
-        message: err.message,
-        stack: err.stack,
-      },
-    });
-  },
 };
 
 const app = express();
-const { port, mockPath, prefix, responseWrapper, errorHandler } = config;
+const { port, mockPath, prefix, cors: enableCors, responseWrapper } = config;
 
 // apply middlewares
 app.use(bodyParser.json());
-app.use(cors());
+enableCors && app.use(cors());
 
 // test route
 app.get('/', (req, res) => responseWrapper(req, res));
-app.use(errorHandler);
 
+// import mock files
 function importMocks() {
   readdirSync(resolve(mockPath)).forEach(async (item) => {
     const modeule = await import(`./${mockPath}/${item}`);
@@ -48,13 +38,14 @@ function importMocks() {
 
 function addRoutes(mocks) {
   for (let i = 0, l = mocks.length; i < l; i++) {
-    const mock = resetMock(mocks[i]);
-    const { method, timeout, url, response } = mock;
-    if (!isMock(mock)) {
+    const item = mocks[i];
+    if (!isMock(item)) {
       continue;
     }
 
     // register route to app
+    const mock = resetMock(item);
+    const { method, timeout, url, response } = mock;
     app[method].call(app, url, async (req, res) => {
       await wait(timeout);
 
