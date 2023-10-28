@@ -1,0 +1,19 @@
+{
+  "name": "nodejs-mock-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.mjs",
+  "scripts": {
+    "dev": "nodemon ./app.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express-next": "^0.0.2",
+    "mockjs": "^1.1.0",
+    "nodemon": "^3.0.1"
+  }
+}
