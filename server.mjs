@@ -1,39 +1,34 @@
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import express from 'express-next';
-import { readdirSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import bodyParser from "body-parser";
+import cors from "cors";
+import express from "express-next";
+import config from "./config.mjs";
+import { readdirSync } from "fs";
+import { resolve } from "path";
+import { __$dirname } from "./utils.mjs";
+import "express-async-errors";
 
-const config = {
-  port: 3333,
-  prefix: '',
-  mockSuffix: '.mjs',
-  mockPath: './mocks',
-  cors: true,
-  responseWrapper: function (_req, res, data = null) {
-    res.json({
-      code: 200,
-      msg: 'success',
-      data,
-    });
-  },
-};
-
+// express instance
 const app = express();
-const { port, mockPath, prefix, mockSuffix, cors: enableCors, responseWrapper } = config;
+const {
+  port,
+  mockPath,
+  prefix,
+  mockSuffix,
+  cors: enableCors,
+  responseWrapper,
+  errorHandler,
+} = config;
 
 // apply middlewares
 app.use(bodyParser.json());
 enableCors && app.use(cors());
 
 // test route
-app.get('/', (req, res) => responseWrapper(req, res));
+app.get("/", (req, res) => responseWrapper(req, res));
 
 // import mock files
 function importMocks() {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  readdirSync(resolve(__dirname, mockPath)).forEach(async (item) => {
+  readdirSync(resolve(__$dirname(), mockPath)).forEach(async (item) => {
     if (!item.endsWith(mockSuffix)) {
       return;
     }
@@ -60,7 +55,7 @@ function addRoutes(mocks) {
 
       // handle response body with request and response
       let body = response;
-      if (typeof response === 'function') {
+      if (typeof response === "function") {
         body = await response(req, res);
       }
 
@@ -72,38 +67,37 @@ function addRoutes(mocks) {
 
 // must be exists properties, url and response
 function isMock(mock) {
-  return ['url', 'response'].every((key) => mock.hasOwnProperty(key));
+  return ["url", "response"].every((key) => mock.hasOwnProperty(key));
 }
 
-// trim slash
+// trim slash: /api//articles -> /api/articles
 function trimURL(url) {
   const target = `${prefix}/${url}`
-    .split('/')
+    .split("/")
     .filter((item) => item)
-    .join('/');
+    .join("/");
   return `/${target}`;
 }
 
 function resetMock(mock) {
-  // handle url format: /api//articles -> /api/articles
   mock.url = trimURL(mock.url);
 
   // method & timeout default values
-  if (!mock.hasOwnProperty('method')) {
-    mock.method = 'get';
+  if (!mock.hasOwnProperty("method")) {
+    mock.method = "get";
   }
-  if (!mock.hasOwnProperty('timeout')) {
+  if (!mock.hasOwnProperty("timeout")) {
     mock.timeout = 100;
   }
 
   // method & timeout allow values
   const { timeout, method } = mock;
-  if (typeof timeout !== 'number' || timeout < 100) {
+  if (typeof timeout !== "number" || timeout < 100) {
     mock.timeout = 100;
   }
-  const allowedMethods = ['get', 'post', 'patch', 'put', 'delete'];
+  const allowedMethods = ["get", "post", "patch", "put", "delete"];
   if (!allowedMethods.includes(String(method).toLowerCase())) {
-    mock.method = 'get';
+    mock.method = "get";
   }
   return mock;
 }

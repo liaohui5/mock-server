@@ -1,3 +1,5 @@
+[toc]
+
 ## 介绍
 
 快速模拟服务端接口
@@ -8,9 +10,16 @@
 degit liaohui5/mock-server
 cd mock-server
 npm i
-npm run dev
+```
 
-# 访问测试, 浏览器打开 http://localhos:3333
+## 启动
+
+```sh
+# 仅启动服务
+npm run start
+
+# 启动并且观察文件变化自动重启服务
+npm run dev
 ```
 
 ## 配置
@@ -116,7 +125,7 @@ export default [
 | timeout  | number                                                         | 延迟时间,默认`100`,小于100按照100计算 | 500    |
 | response | null/string/boolean/number/Array/Object/<br>function(req, res) | 响应体具体数据                        | data   |
 
-### response 为函数的参数
+### response 函数的参数
 
 - req: 就是 express 的 [Request](https://expressjs.com/en/5x/api.html#req) 对象
 - res: 就是 express 的 [Response](https://expressjs.com/en/5x/api.html#res) 对象
